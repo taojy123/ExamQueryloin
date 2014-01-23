@@ -7,6 +7,7 @@ import re
 import traceback
 import xlwt
 import xlrd
+import BeautifulSoup
 
 cj = cookielib.CookieJar()
 opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
@@ -31,7 +32,7 @@ def get_page(url, data=None):
             page = resp.read()
             return page
         except:
-            traceback.print_exc()
+            #traceback.print_exc()
             print "Will try after 2 seconds ..."
             time.sleep(2.0)
             continue
@@ -47,30 +48,53 @@ ev = "/wEWSwKW3t3wBgLN2fyaBALT2cSaBALQ2fCaBALQ2ZyZBALT2ZyZBALT2ciaBALN2dSaBALX2c
 
 data = xlrd.open_workbook('data.xls')
 table = data.sheets()[0]
+open("output.csv", "w").write("%s,%s,%s,%s,%s\n"%("姓名", "身份证号", "手机", "专业", "级别"))
 
 for i in range(1, table.nrows):
-    name = table.cell(i, 0).value.encode("gbk")
-    idnum = str(table.cell(i, 1).value)
-    phone = str(table.cell(i, 8).value)
+    try:
+        name = table.cell(i, 0).value.encode("gbk")
+        idnum = str(table.cell(i, 1).value).split(".")[0]
+        phone = str(table.cell(i, 8).value).split(".")[0]
 
 
-    formData = urllib.urlencode({'__VIEWSTATE' : vs,
-                                 'dplExam' : "62",
-                                 'txtName' : name,
-                                 'txtIDNum' : idnum,
-                                 'dplRegType' : "0",
-                                 'btnResult.x' : "53",
-                                 'btnResult.y' : "11",
-                                 "__EVENTVALIDATION" : ev
-                                 })
+        formData = urllib.urlencode({'__VIEWSTATE' : vs,
+                                     'dplExam' : "62",
+                                     'txtName' : name,
+                                     'txtIDNum' : idnum,
+                                     'dplRegType' : "0",
+                                     'btnResult.x' : "53",
+                                     'btnResult.y' : "11",
+                                     "__EVENTVALIDATION" : ev
+                                     })
 
-    print "get:" + name
-    p = get_page(url, formData)
+        print i
+        p = get_page(url, formData)
 
-    #print p
+        #print p
 
-    if "成绩表" in p:
-        print name, idnum, phone, "========================================"
+        if "成绩表" in p:
 
+            result = name + ",'" + idnum + ",'" + phone + ","
+            
+            soup = BeautifulSoup.BeautifulSoup(p)
+            major = soup.find(id="txtMajor").get("value").encode("gbk")
+            level = soup.find(id="txtLevel").get("value").encode("gbk")
 
-input()
+            result +=  major + "," + level + ","
+            
+            tab = soup.find(id="grdInfoList")
+            trs = tab.findAll("tr")[1:]
+            for tr in trs:
+                subject = tr.findAll("td")[1].getText().encode("gbk")
+                score = tr.findAll("td")[2].getText().encode("gbk")
+                result +=  subject + "," + score + ","
+
+            print result
+            open("output.csv", "a").write(result + "\n")
+            print "========================================"
+            
+    except:
+        print "err", name
+        #traceback.print_exc()
+
+input("完成，按下回车键退出")
