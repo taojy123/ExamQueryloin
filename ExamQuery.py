@@ -84,14 +84,18 @@ for i in range(1, table.nrows):
             
             tab = soup.find(id="grdInfoList")
             trs = tab.findAll("tr")[1:]
+            flag = True
             for tr in trs:
                 subject = tr.findAll("td")[1].getText().encode("gbk")
                 score = tr.findAll("td")[2].getText().encode("gbk")
                 result +=  subject + "," + score + ","
+                if float(score) < 50:
+                    flag = False
 
-            print result
-            open("output.csv", "a").write(result + "\n")
-            print "========================================"
+            if flag:
+                print result
+                open("output.csv", "a").write(result + "\n")
+                print "========================================"
             
     except:
         print "err", name
