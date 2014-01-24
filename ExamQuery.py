@@ -54,7 +54,7 @@ for i in range(1, table.nrows):
     try:
         name = table.cell(i, 0).value.encode("gbk")
         idnum = str(table.cell(i, 1).value).split(".")[0]
-        phone = str(table.cell(i, 8).value).split(".")[0]
+        phone = str(table.cell(i, 9).value).split(".")[0]
 
 
         formData = urllib.urlencode({'__VIEWSTATE' : vs,
